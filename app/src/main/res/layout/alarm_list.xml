@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <!--    <androidx.appcompat.widget.Toolbar-->
+        <!--        android:id="@+id/toolbar_home"-->
+        <!--        android:layout_width="match_parent"-->
+        <!--        android:layout_height="?attr/actionBarSize"-->
+        <!--        android:background="@drawable/solid_top_view"-->
+        <!--        app:layout_constraintTop_toTopOf="parent"-->
+        <!--        app:titleTextColor="@android:color/white" />-->
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerview_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/txt_no_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Alarms Exist"
+            android:textSize="14sp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="@+id/recyclerview_list"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/recyclerview_list" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_baseline_add_24"
+        app:backgroundTint="@color/design_default_color_primary"
+        app:tint="@android:color/white" />
+
+    <View
+        android:id="@+id/bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone" />
+
+
+    <include layout="@layout/bottom_sheet_set_alarm" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

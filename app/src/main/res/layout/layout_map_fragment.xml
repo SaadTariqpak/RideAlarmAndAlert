@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+
+    <FrameLayout
+        android:id="@+id/map_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
+    <!--        android:id="@+id/fab_location_search"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_gravity="end|bottom"-->
+    <!--        android:layout_margin="16dp"-->
+    <!--        android:tint="@android:color/white"-->
+    <!--        app:backgroundTint="@color/design_default_color_primary"-->
+    <!--        app:srcCompat="@android:drawable/ic_search_category_default" />-->
+
+    <View
+        android:id="@+id/bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone" />
+
+    <include layout="@layout/fabu" />
+    <!-- Adding bottom sheet after main content -->
+    <include layout="@layout/bottom_sheet_lat_lng" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Ride Alarm And Alert</string>
+    <string name="mapbox_access_token">pk.eyJ1Ijoic2FhZHRhcmlxIiwiYSI6ImNranZjOWZ4bjA3aW8yeXFycmhmdXptNTQifQ.2MeJb5ldUpooF10A73j7Aw</string>
+
+</resources>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.ridealarmandalert">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.RideAlarmAndAlert">
+
+
+        <!--        <meta-data-->
+        <!--            android:name="com.here.android.maps.appid"-->
+        <!--            android:value="jXpLVbtkb9v3sFbadOyy" />-->
+        <!--        <meta-data-->
+        <!--            android:name="com.here.android.maps.apptoken"-->
+        <!--            android:value="vS5iLqVYbg6qj1fVdjyQ6A" />-->
+        <!--        <meta-data-->
+        <!--            android:name="com.here.android.maps.license.key"-->
+        <!--            android:value="g5A+TUrTQQ+Ie7s3lBInoOts9zTONUcugOsB8lUI+D9mbNxU+j4WqOqQ0tSQHSPCXXVD7ep3pyFbyzykxRTsWCcPc6kiJmwJDaxj8hTrLG0EXCceQ/wATXh9AabcxEhLA4IW+1ijLNJ+zhRjViNNQnAAxSWIg5lj0Kew+eoOY4DvPtD3wwlkg5tkrzyPCuViR3DQIjzhYlB7C63XwDASuUtT097XTT2mJdaZUgOivH6zUs5S9/3DZClt5RAuyI5Idosj3zJKuonysUlja3WhLHXxvfJRZOctNz8pNpVUygVwQL9RAzIdh99FCvdqukou/uRsE0BYs/LQVxmtxKdK6M7FyYaJoPCC5lqZVnCJZe215u5xqTHqPKNSukncYmQ6cI2UweJHcgKBzeLJOC9uP3unvgcPDJ3CvvzPWHt2llCXB9uTRYpyq0t9xxpFa9H0vxa5lb3okGpTwUfc3EN/ldbln2LrFLrjP/xb0es983o2hhIRS16qAmP7Tvo6MelWy9My9H37XJra7O8v/KoTmuJiKl4ow2bWSATlDSEoBycTOi8j4UorMyU7kzTIdPsnJOonEUSTa1ntyUB2QYZh16fpeOCNwbg8/OEDvKFOnH2cwc5sYX8nCMK8nsT6j3xWehzdJrrLYc0tVU0Q7G+TfwDBbglHIZ2lZYs/rfQMdVY=" />-->
+
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver android:name=".reciever.AlarmReceiver" />
+
+        <receiver android:name=".reciever.BootCompletedIntentReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".service.AlarmService" />
+
+    </application>
+
+</manifest>

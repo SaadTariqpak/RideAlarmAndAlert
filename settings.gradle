@@ -1,0 +1,4 @@
+
+include ':app'
+//include ':app:libs'
+rootProject.name = "Ride Alarm And Alert"
