@@ -35,8 +35,6 @@ public class AlarmService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        createNotificationChannels();
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground(1337, getForegroundServiceNotification());
 
@@ -89,26 +87,6 @@ public class AlarmService extends Service {
                 .build();
     }
 
-    private void createNotificationChannels() {
 
-        NotificationChannel channelGeneral;
-        NotificationManager notificationManager = null;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            notificationManager = (NotificationManager) getSystemService(NotificationManager.class);
-
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            channelGeneral = new NotificationChannel(GenralchanelId, GenralchanelId, NotificationManager.IMPORTANCE_HIGH);
-            channelGeneral.enableLights(true);
-            channelGeneral.enableVibration(true);
-            channelGeneral.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
-            notificationManager.createNotificationChannel(channelGeneral);
-
-        }
-
-
-    }
 
 }

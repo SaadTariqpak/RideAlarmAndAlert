@@ -20,6 +20,7 @@ import android.widget.TimePicker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -59,6 +60,14 @@ public class AlarmListFragment extends Fragment implements DatePickerDialog.OnDa
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.alarm_list, container, false);
+
+        try {
+
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Alarms List");
+        } catch (Exception ignore) {
+
+        }
+
         mViewBg = v.findViewById(R.id.bg);
 
         recyclerViewTableList = v.findViewById(R.id.recyclerview_list);

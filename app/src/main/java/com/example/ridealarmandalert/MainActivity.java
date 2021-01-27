@@ -52,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+        createNotificationChannels();
+
+
     }
 
 
@@ -76,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.item_edit_profile) {
             Constants.locationReqCount = 0;
             new FragUtil(MainActivity.this).
-                    changeFragmentWithBackstack(new ViewProfileData(),
+                    changeFragmentWithBackstack(new UpdateProfileData(),
                             R.id.main_container, R.anim.anim_slide_in_right, R.anim.anim_slide_out_left,
                             R.anim.anim_slide_in_left, R.anim.anim_slide_out_right);
         } else
@@ -85,5 +88,26 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    private void createNotificationChannels() {
+
+        NotificationChannel channelGeneral;
+        NotificationManager notificationManager = null;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            notificationManager = (NotificationManager) getSystemService(NotificationManager.class);
+
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            channelGeneral = new NotificationChannel(GenralchanelId, GenralchanelId, NotificationManager.IMPORTANCE_HIGH);
+            channelGeneral.enableLights(true);
+            channelGeneral.enableVibration(true);
+            channelGeneral.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+            notificationManager.createNotificationChannel(channelGeneral);
+
+        }
+
+
+    }
 
 }

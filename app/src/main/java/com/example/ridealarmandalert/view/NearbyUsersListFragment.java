@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -31,6 +32,13 @@ public class NearbyUsersListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.users_list, container, false);
 
+        try {
+
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Nearby Users");
+        } catch (Exception ignore) {
+
+        }
+
         recyclerViewTableList = v.findViewById(R.id.recyclerview_list);
 
         mLayoutManager = new LinearLayoutManager(getContext());
@@ -40,7 +48,7 @@ public class NearbyUsersListFragment extends Fragment {
         recyclerViewTableList.setItemAnimator(new DefaultItemAnimator());
 
 
-        adapter = new NearbyUserListAdapter(getActivity(), txtNoData,(Location) getArguments().getParcelable("location"));
+        adapter = new NearbyUserListAdapter(getActivity(), txtNoData, (Location) getArguments().getParcelable("location"));
 
         recyclerViewTableList.setAdapter(adapter);
 

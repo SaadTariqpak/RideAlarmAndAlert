@@ -5,5 +5,5 @@ public class Constants {
     public static final String GenralchanelId = "GeneralNotifications";
     public static final String FgServicechannelId = "FgServiceChannel";
 
-
+    public static final String emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+";
 }

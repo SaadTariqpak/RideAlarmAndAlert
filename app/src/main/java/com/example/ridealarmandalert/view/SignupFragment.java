@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.example.ridealarmandalert.R;
@@ -38,6 +39,14 @@ public class SignupFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.signup_fragment, container, false);
+
+        try {
+
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getActivity().getResources().getString(R.string.app_name));
+        } catch (Exception ignore) {
+
+        }
+
         setHasOptionsMenu(true);
 
         edtName = v.findViewById(R.id.edt_name);

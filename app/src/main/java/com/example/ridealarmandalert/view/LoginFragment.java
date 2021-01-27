@@ -18,6 +18,7 @@ import androidx.fragment.app.FragmentManager;
 
 import com.example.ridealarmandalert.R;
 import com.example.ridealarmandalert.utils.CheckInternetConnection;
+import com.example.ridealarmandalert.utils.Constants;
 import com.example.ridealarmandalert.utils.FragUtil;
 import com.example.ridealarmandalert.utils.MyProgressDialog;
 import com.example.ridealarmandalert.utils.SharedPreferencesManager;
@@ -40,6 +41,15 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.login_fragment, container, false);
+
+        try {
+
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getActivity().getResources().getString(R.string.app_name));
+        } catch (Exception ignore) {
+
+        }
+
+
         setHasOptionsMenu(true);
         v.findViewById(R.id.txt_signup).setOnClickListener(this);
         v.findViewById(R.id.cd_btn_login).setOnClickListener(this);
@@ -75,6 +85,10 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         if (TextUtils.isEmpty(email)) {
             edtUsername.setError("Required.");
             valid = false;
+        } else if (!email.matches(Constants.emailPattern)) {
+            edtUsername.setError("Invalid Email.");
+            valid = false;
+
         } else {
             edtUsername.setError(null);
         }

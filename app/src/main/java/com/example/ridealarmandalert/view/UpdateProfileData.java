@@ -21,6 +21,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
@@ -63,11 +64,18 @@ public class UpdateProfileData extends Fragment {
     private StorageReference storageReference;
     private String userID;
     private SharedPreferencesManager sharedPreferencesManager;
+    ProgressDialog progressDialog;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.update_profile_data, container, false);
+        try {
+
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("User Profile");
+        } catch (Exception ignore) {
+
+        }
 
         init();
         return v;
@@ -106,6 +114,8 @@ public class UpdateProfileData extends Fragment {
     }
 
     private void init() {
+        progressDialog = new ProgressDialog(getContext());
+
         sharedPreferencesManager = new SharedPreferencesManager(getActivity());
         userID = sharedPreferencesManager.getPreferencesManager().getString(SharedPreferencesManager.USERUNIQUEID, "");
 
@@ -127,7 +137,12 @@ public class UpdateProfileData extends Fragment {
             @Override
             public void onClick(View v) {
                 if (validateForm()) {
-                    uploadImage();
+
+                    if (btmp == null) {
+                        uploadData(null, null);
+                    } else {
+                        uploadImage();
+                    }
                 }
             }
         });
@@ -277,6 +292,53 @@ public class UpdateProfileData extends Fragment {
 
     }
 
+    private void uploadData(Uri uri, String imageName) {
+
+        if (!progressDialog.isShowing()) {
+            progressDialog.setTitle("Uploading...");
+            progressDialog.show();
+        }
+
+        final DatabaseReference childDataBaseReference = FirebaseDatabase.getInstance().getReference().child("users").child(userID);
+
+
+        childDataBaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    HashMap<String, String> hashMap = new HashMap<>();
+
+                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                        hashMap.put(dataSnapshot.getKey(), dataSnapshot.getValue().toString());
+                    }
+
+
+                    if (uri != null)
+                        hashMap.put("image_url", String.valueOf(uri));
+
+                    if (imageName != null)
+                        hashMap.put("image_name", imageName);
+                    hashMap.put("name", editTextName.getText().toString());
+                    hashMap.put("emergency_phone", edtEmergencyPhone.getText().toString());
+                    hashMap.put("disease", edtDisease.getText().toString());
+
+
+                    childDataBaseReference.setValue(hashMap);
+                }
+
+                progressDialog.dismiss();
+                Toast.makeText(getContext(), "Data Uploaded", Toast.LENGTH_SHORT).show();
+
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                progressDialog.dismiss();
+
+            }
+        });
+    }
 
     //function to upload image to firebase
     private void uploadImage() {
@@ -287,7 +349,6 @@ public class UpdateProfileData extends Fragment {
             btmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
             byte[] byteArray = stream.toByteArray();
 
-            final ProgressDialog progressDialog = new ProgressDialog(getContext());
             progressDialog.setTitle("Uploading...");
             progressDialog.show();
 
@@ -309,42 +370,7 @@ public class UpdateProfileData extends Fragment {
 //                                        btmp = null;
 //                                    }
 
-
-                                    final DatabaseReference childDataBaseReference = FirebaseDatabase.getInstance().getReference().child("users").child(userID);
-
-
-                                    childDataBaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                            if (snapshot.exists()) {
-                                                HashMap<String, String> hashMap = new HashMap<>();
-
-                                                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                                                    hashMap.put(dataSnapshot.getKey(), dataSnapshot.getValue().toString());
-                                                }
-
-                                                hashMap.put("image_url", String.valueOf(uri));
-                                                hashMap.put("image_name", ref.getName());
-                                                hashMap.put("name", editTextName.getText().toString());
-                                                hashMap.put("emergency_phone", edtEmergencyPhone.getText().toString());
-                                                hashMap.put("disease", edtDisease.getText().toString());
-
-
-                                                childDataBaseReference.setValue(hashMap);
-                                            }
-
-
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError error) {
-
-                                        }
-                                    });
-
-
-                                    progressDialog.dismiss();
-                                    Toast.makeText(getContext(), "Uploaded", Toast.LENGTH_SHORT).show();
+                                    uploadData(uri, ref.getName());
 
 
                                 }

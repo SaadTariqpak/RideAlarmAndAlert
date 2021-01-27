@@ -3,6 +3,8 @@ package com.example.ridealarmandalert.view;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -28,9 +30,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.ridealarmandalert.R;
+import com.example.ridealarmandalert.db.DBHelper;
 import com.example.ridealarmandalert.models.ChildModel;
+import com.example.ridealarmandalert.reciever.AlarmReceiver;
 import com.example.ridealarmandalert.utils.Constants;
 import com.example.ridealarmandalert.utils.FragUtil;
+import com.example.ridealarmandalert.utils.MyProgressDialog;
 import com.example.ridealarmandalert.utils.SharedPreferencesManager;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.database.DataSnapshot;
@@ -87,6 +92,7 @@ import com.wangjie.rapidfloatingactionbutton.contentimpl.labellist.RapidFloating
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import retrofit2.Call;
@@ -94,6 +100,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import timber.log.Timber;
 
+import static android.content.Context.ALARM_SERVICE;
 import static android.os.Looper.getMainLooper;
 import static com.example.ridealarmandalert.utils.Constants.locationReqCount;
 import static com.mapbox.core.constants.Constants.PRECISION_6;
@@ -166,6 +173,9 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.layout_map_fragment, container, false);
         try {
+
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Home");
+
 
             rfaContent = new RapidFloatingActionContentLabelList(getContext());
             rfaContent.setOnRapidFloatingActionContentLabelListListener(this);
@@ -608,15 +618,15 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
                 .setLabelColor(Color.WHITE)
                 .setLabelBackgroundDrawable(getResources().getDrawable(R.drawable.label_bg))
         );
-//        items.add(new RFACLabelItem<Integer>()
-//                .setLabel("Items")
-//                .setResId(R.drawable.ic_baseline_add_box_24)
-//                .setIconNormalColor(R.color.themeColor1)
-//                .setIconPressedColor(R.color.themeColor2)
-//                .setWrapper(0)
-//                .setLabelColor(Color.WHITE)
-//                .setLabelBackgroundDrawable(getResources().getDrawable(R.drawable.label_bg))
-//        );
+        items.add(new RFACLabelItem<Integer>()
+                .setLabel("Start Journey")
+                .setResId(R.drawable.ic_baseline_directions_bike_24)
+                .setIconNormalColor(R.color.themeColor1)
+                .setIconPressedColor(R.color.themeColor2)
+                .setWrapper(0)
+                .setLabelColor(Color.WHITE)
+                .setLabelBackgroundDrawable(getResources().getDrawable(R.drawable.label_bg))
+        );
 
         rfaContent
                 .setItems(items)
@@ -690,9 +700,33 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
                                 R.id.main_container, R.anim.anim_slide_in_right, R.anim.anim_slide_out_left,
                                 R.anim.anim_slide_in_left, R.anim.anim_slide_out_right);
                 break;
+            case 3:
+                setAlarm();
+                break;
         }
     }
 
+    private void setAlarm() {
+        long mTime = getTime();
+        Intent intent = new Intent(getActivity(), AlarmReceiver.class);
+        intent.putExtra("title", "Hello, its time to take some rest");
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 787868, intent, PendingIntent.FLAG_UPDATE_CURRENT | Intent.FILL_IN_DATA);
+
+        AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(ALARM_SERVICE);
+
+        assert alarmManager != null;
+        alarmManager.set(AlarmManager.RTC_WAKEUP, mTime, pendingIntent);
+        Toast.makeText(getActivity(), "Journey Started", Toast.LENGTH_SHORT).show();
+
+    }
+
+    private long getTime() {
+        Calendar c = Calendar.getInstance();
+        c.add(Calendar.HOUR, 3);
+
+        return c.getTimeInMillis();
+    }
 
     private class MainActivityLocationCallback
             implements LocationEngineCallback<LocationEngineResult> {
@@ -909,7 +943,7 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
 
                             String[] arr = data.child("location").getValue().toString().split("/");
                             LatLng point = new LatLng(Double.parseDouble(arr[0]), Double.parseDouble(arr[1]));
-                             symbol = symbolManager.create(new SymbolOptions()
+                            symbol = symbolManager.create(new SymbolOptions()
                                             .withLatLng(point)
                                             .withIconImage(IMAGE_YELLOW_ID).
                                                     withIconOffset(new Float[]{0f, -9f})

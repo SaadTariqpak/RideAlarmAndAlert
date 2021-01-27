@@ -38,14 +38,14 @@ public class AlarmReceiver extends BroadcastReceiver {
         NotificationManagerCompat managerCompat = NotificationManagerCompat.from(context);
         managerCompat.notify(notificationId, getNotification(title, "" + title, requestCode));
 
-        Intent fgServiceIntent = new Intent(context, AlarmService.class);
-        fgServiceIntent.putExtra("id", id);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(fgServiceIntent);
-        } else {
-            context.startService(fgServiceIntent);
-        }
+//        Intent fgServiceIntent = new Intent(context, AlarmService.class);
+//        fgServiceIntent.putExtra("id", id);
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            context.startForegroundService(fgServiceIntent);
+//        } else {
+//            context.startService(fgServiceIntent);
+//        }
 
 
     }
