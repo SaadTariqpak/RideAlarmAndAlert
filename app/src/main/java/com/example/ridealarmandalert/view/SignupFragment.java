@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.ridealarmandalert.R;
 import com.example.ridealarmandalert.utils.CheckInternetConnection;
+import com.example.ridealarmandalert.utils.Constants;
 import com.example.ridealarmandalert.utils.MyProgressDialog;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.card.MaterialCardView;
@@ -98,6 +99,9 @@ public class SignupFragment extends Fragment {
         String email = edtEmail.getText().toString();
         if (TextUtils.isEmpty(email)) {
             edtEmail.setError("Required.");
+            valid = false;
+        } else if (!email.matches(Constants.emailPattern)) {
+            edtEmail.setError("Invalid Email.");
             valid = false;
         } else {
             edtEmail.setError(null);
