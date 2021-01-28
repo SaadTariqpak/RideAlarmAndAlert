@@ -2,6 +2,7 @@ package com.example.ridealarmandalert.adapter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.location.Location;
@@ -42,7 +43,7 @@ public class NearbyUserListAdapter extends RecyclerView.Adapter<NearbyUserListAd
     private ArrayList<ChildModel> childModelArrayList;
     private Context mContext;
     DatabaseReference databaseReference;
-    String mEmail;
+    String mEmail, userId;
     TextView txtNoData;
     Location location;
 
@@ -56,7 +57,9 @@ public class NearbyUserListAdapter extends RecyclerView.Adapter<NearbyUserListAd
 
         childModelArrayList = new ArrayList<>();
 
-        mEmail = new SharedPreferencesManager(context).getPreferencesManager().getString(SharedPreferencesManager.USERNAME, "");
+        SharedPreferences sharedPreferencesManager = new SharedPreferencesManager(context).getPreferencesManager();
+        mEmail = sharedPreferencesManager.getString(SharedPreferencesManager.USERNAME, "");
+        userId = sharedPreferencesManager.getString(SharedPreferencesManager.USERUNIQUEID, "");
 
         databaseReference = FirebaseDatabase.getInstance().getReference();
 
@@ -168,13 +171,13 @@ public class NearbyUserListAdapter extends RecyclerView.Adapter<NearbyUserListAd
     }
 
     private void getUserFromFb() {
-        databaseReference.child("users").addValueEventListener(new ValueEventListener() {
+        databaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 childModelArrayList.clear();
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                     ChildModel childModel = new ChildModel();
-                    if (data.hasChildren()) {
+                    if (!data.getKey().equals(userId) && data.hasChildren()) {
                         String[] arr = data.child("location").getValue().toString().split("/");
                         if (checkUserExistInBound(new LatLng(Double.parseDouble(arr[0]), Double.parseDouble(arr[1])))) {
 
@@ -187,11 +190,16 @@ public class NearbyUserListAdapter extends RecyclerView.Adapter<NearbyUserListAd
                             if (data.hasChild("image_url")) {
                                 childModel.setImgPath(String.valueOf(data.child("image_url").getValue()));
                             }
+
+
+                            childModel.setId(data.getKey());
+                            childModelArrayList.add(childModel);
                         }
+
+
                     }
 
-                    childModel.setId(data.getKey());
-                    childModelArrayList.add(childModel);
+
                 }
                 notifyDataSetChanged();
             }

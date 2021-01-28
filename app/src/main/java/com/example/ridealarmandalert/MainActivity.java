@@ -24,6 +24,7 @@ import com.example.ridealarmandalert.view.UpdateProfileData;
 import com.example.ridealarmandalert.view.ViewProfileData;
 
 import static com.example.ridealarmandalert.utils.Constants.GenralchanelId;
+import static com.example.ridealarmandalert.utils.Constants.locationReqCount;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
 
 
         String mUsername = sharedPreferencesManager.getPreferencesManager().getString(SharedPreferencesManager.USERNAME, "");
+        Constants.timerStartTime = sharedPreferencesManager.getPreferencesManager().getLong(SharedPreferencesManager.TIMERTIMER, 0);
+        Constants.flagAlarm = sharedPreferencesManager.getPreferencesManager().getBoolean(SharedPreferencesManager.FLAGTIMER, false);
+
         if (mUsername.equals("")) {
 
             new FragUtil(MainActivity.this).changeFragmentWithoutBackstack(new LoginFragment(), R.id.main_container, -1, -1);
@@ -75,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
             sharedPreferencesManager.getPreferencesManager().edit().remove(SharedPreferencesManager.USERNAME).remove(SharedPreferencesManager.USERUNIQUEID).apply();
 
             new FragUtil(MainActivity.this).changeFragmentWithoutBackstack(new LoginFragment(), R.id.main_container, -1, -1);
+            sharedPreferencesManager.getPreferencesManager().edit().putBoolean(SharedPreferencesManager.FLAGTIMER, false).putLong(SharedPreferencesManager.TIMERTIMER, 0).apply();
 
         } else if (item.getItemId() == R.id.item_edit_profile) {
             Constants.locationReqCount = 0;
@@ -110,4 +115,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onStop() {
+        locationReqCount = 0;
+        super.onStop();
+    }
 }

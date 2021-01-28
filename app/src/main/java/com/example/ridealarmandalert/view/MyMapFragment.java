@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -13,12 +14,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,12 +33,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.ridealarmandalert.R;
-import com.example.ridealarmandalert.db.DBHelper;
-import com.example.ridealarmandalert.models.ChildModel;
 import com.example.ridealarmandalert.reciever.AlarmReceiver;
 import com.example.ridealarmandalert.utils.Constants;
 import com.example.ridealarmandalert.utils.FragUtil;
-import com.example.ridealarmandalert.utils.MyProgressDialog;
 import com.example.ridealarmandalert.utils.SharedPreferencesManager;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.database.DataSnapshot;
@@ -43,9 +43,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineCallback;
 import com.mapbox.android.core.location.LocationEngineProvider;
@@ -57,7 +54,6 @@ import com.mapbox.api.directions.v5.models.DirectionsResponse;
 import com.mapbox.api.directions.v5.models.DirectionsRoute;
 import com.mapbox.api.geocoding.v5.models.CarmenFeature;
 import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
@@ -82,7 +78,6 @@ import com.mapbox.mapboxsdk.plugins.places.autocomplete.PlaceAutocomplete;
 import com.mapbox.mapboxsdk.plugins.places.autocomplete.model.PlaceOptions;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
-import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.wangjie.rapidfloatingactionbutton.RapidFloatingActionButton;
 import com.wangjie.rapidfloatingactionbutton.RapidFloatingActionHelper;
@@ -90,10 +85,15 @@ import com.wangjie.rapidfloatingactionbutton.RapidFloatingActionLayout;
 import com.wangjie.rapidfloatingactionbutton.contentimpl.labellist.RFACLabelItem;
 import com.wangjie.rapidfloatingactionbutton.contentimpl.labellist.RapidFloatingActionContentLabelList;
 
-import java.io.Serializable;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -102,18 +102,13 @@ import timber.log.Timber;
 
 import static android.content.Context.ALARM_SERVICE;
 import static android.os.Looper.getMainLooper;
+import static com.example.ridealarmandalert.utils.Constants.flagAlarm;
 import static com.example.ridealarmandalert.utils.Constants.locationReqCount;
 import static com.mapbox.core.constants.Constants.PRECISION_6;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacement;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconSize;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineCap;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineJoin;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.symbolZOrder;
 
 public class MyMapFragment extends Fragment implements OnMapReadyCallback, MapboxMap.OnMapClickListener, RapidFloatingActionContentLabelList.OnRapidFloatingActionContentLabelListListener {
     View v, mViewBg;
@@ -138,7 +133,7 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
     private static final String ROUTE_SOURCE_ID = "route-path";
     private static final String ROUTE_LAYER_ID = "route-layer";
 
-    private TextView txtSheetLatLng;
+    private TextView txtSheetLatLng, txtTimer;
 
     private RapidFloatingActionHelper rfabHelper;
     private RapidFloatingActionContentLabelList rfaContent;
@@ -158,8 +153,13 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
     String mEmail, uKey;
 
     DatabaseReference databaseReference;
+    SharedPreferences sharedPreferencesManager;
 
     ArrayList<Symbol> symbolArrayList = new ArrayList<>();
+    List<RFACLabelItem> fabItems = new ArrayList<>();
+    private ArrayList<Timer> timerList = new ArrayList<>();
+    private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+    private NumberFormat f = new DecimalFormat("00");
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -176,11 +176,11 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
 
             ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Home");
 
-
+            txtTimer = v.findViewById(R.id.txt_timer);
             rfaContent = new RapidFloatingActionContentLabelList(getContext());
             rfaContent.setOnRapidFloatingActionContentLabelListListener(this);
             mViewBg = v.findViewById(R.id.bg);
-            SharedPreferences sharedPreferencesManager = new SharedPreferencesManager(getActivity()).getPreferencesManager();
+            sharedPreferencesManager = new SharedPreferencesManager(getActivity()).getPreferencesManager();
             mEmail = sharedPreferencesManager.getString(SharedPreferencesManager.USERNAME, "");
             uKey = sharedPreferencesManager.getString(SharedPreferencesManager.USERUNIQUEID, "");
 
@@ -279,20 +279,11 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
 
                 if (checkPermission()) {
 
-                    // Get an instance of the component
                     locationComponent = mapboxMap.getLocationComponent();
-
-// Activate with options
                     locationComponent.activateLocationComponent(
                             LocationComponentActivationOptions.builder(getActivity(), mapboxMap.getStyle()).build());
-
-// Enable to make component visible
                     locationComponent.setLocationComponentEnabled(true);
-
-// Set the component's camera mode
                     locationComponent.setCameraMode(CameraMode.TRACKING);
-
-// Set the component's render mode
                     locationComponent.setRenderMode(RenderMode.COMPASS);
 
                     initLocationEngine();
@@ -321,7 +312,7 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
     }
 
 
-    private void focusOnLocation(final Location location) {
+    private boolean focusOnLocation(final Location location) {
         try {
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(new LatLng(location.getLatitude(), location.getLongitude()))
@@ -364,10 +355,10 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
 //
 //                        ));
 //            }
-
+            return true;
 
         } catch (NullPointerException e) {
-
+            return false;
         }
     }
 
@@ -589,9 +580,8 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
     }
 
     private void setCustomFab() {
-        List<RFACLabelItem> items = new ArrayList<>();
 
-        items.add(new RFACLabelItem<Integer>()
+        fabItems.add(new RFACLabelItem<Integer>()
                 .setLabel("Find Place")
                 .setResId(R.drawable.ic_baseline_search_24)
                 .setIconNormalColor(R.color.themeColor1)
@@ -600,7 +590,7 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
                 .setLabelColor(Color.WHITE)
                 .setLabelBackgroundDrawable(getResources().getDrawable(R.drawable.label_bg))
         );
-        items.add(new RFACLabelItem<Integer>()
+        fabItems.add(new RFACLabelItem<Integer>()
                 .setLabel("Nearby Users")
                 .setResId(R.drawable.ic_baseline_supervised_user_circle_24)
                 .setIconNormalColor(R.color.themeColor1)
@@ -609,7 +599,7 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
                 .setLabelColor(Color.WHITE)
                 .setLabelBackgroundDrawable(getResources().getDrawable(R.drawable.label_bg))
         );
-        items.add(new RFACLabelItem<Integer>()
+        fabItems.add(new RFACLabelItem<Integer>()
                 .setLabel("Add Alarm")
                 .setResId(R.drawable.ic_baseline_add_alarm_24)
                 .setIconNormalColor(R.color.themeColor1)
@@ -618,9 +608,9 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
                 .setLabelColor(Color.WHITE)
                 .setLabelBackgroundDrawable(getResources().getDrawable(R.drawable.label_bg))
         );
-        items.add(new RFACLabelItem<Integer>()
-                .setLabel("Start Journey")
-                .setResId(R.drawable.ic_baseline_directions_bike_24)
+
+
+        fabItems.add(new RFACLabelItem<Integer>()
                 .setIconNormalColor(R.color.themeColor1)
                 .setIconPressedColor(R.color.themeColor2)
                 .setWrapper(0)
@@ -628,8 +618,16 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
                 .setLabelBackgroundDrawable(getResources().getDrawable(R.drawable.label_bg))
         );
 
+        if (!flagAlarm)
+            fabItems.get(3).setLabel("Start Journey")
+                    .setResId(R.drawable.ic_baseline_directions_bike_24);
+        else
+            fabItems.get(3).setLabel("Take Rest")
+                    .setResId(R.drawable.ic_baseline_airline_seat_recline_extra_24);
+
+
         rfaContent
-                .setItems(items)
+                .setItems(fabItems)
                 .setIconShadowRadius(dpToPx(5))
                 .setIconShadowColor(0xff888888)
                 .setIconShadowDy(dpToPx(5))
@@ -676,22 +674,25 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
                 break;
             case 1:
                 locationReqCount = 0;
-
-                Location location1 = mapboxMap.getLocationComponent().getLastKnownLocation();
-                if (location1 != null) {
-                    Fragment fragment = new NearbyUsersListFragment();
-                    Bundle bundle = new Bundle();
-                    bundle.putParcelable("location", location1);
-                    fragment.setArguments(bundle);
-                    new FragUtil(getActivity()).
-                            changeFragmentWithBackstack(fragment,
-                                    R.id.main_container, R.anim.anim_slide_in_right, R.anim.anim_slide_out_left,
-                                    R.anim.anim_slide_in_left, R.anim.anim_slide_out_right);
+                if (locationComponent.isLocationComponentActivated()) {
+                    Location location1 = mapboxMap.getLocationComponent().getLastKnownLocation();
+                    if (location1 != null) {
+                        Fragment fragment = new NearbyUsersListFragment();
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelable("location", location1);
+                        fragment.setArguments(bundle);
+                        new FragUtil(getActivity()).
+                                changeFragmentWithBackstack(fragment,
+                                        R.id.main_container, R.anim.anim_slide_in_right, R.anim.anim_slide_out_left,
+                                        R.anim.anim_slide_in_left, R.anim.anim_slide_out_right);
+                    } else {
+                        Toast.makeText(getActivity(), "Currently location is not available!", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
                 } else {
-                    Toast.makeText(getActivity(), "Currently location is not available!", Toast.LENGTH_SHORT).show();
-                }
-                break;
+                    Toast.makeText(getActivity(), "Location component not working properly,restart app", Toast.LENGTH_SHORT).show();
 
+                }
 
             case 2:
                 locationReqCount = 0;
@@ -701,13 +702,49 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
                                 R.anim.anim_slide_in_left, R.anim.anim_slide_out_right);
                 break;
             case 3:
-                setAlarm();
+
+                LinearLayout linearLayout1 = (LinearLayout) rfabHelper.obtainRFAContent().getChildAt(0);
+                LinearLayout linearLayout2 = (LinearLayout) linearLayout1.getChildAt(3);
+                TextView textViewM = (TextView) linearLayout2.getChildAt(0);
+                ImageView imageViewM = (ImageView) linearLayout2.getChildAt(1);
+                if (Constants.flagAlarm) {
+                    textViewM.setText("Start Journey");
+                    imageViewM.setImageResource(R.drawable.ic_baseline_directions_bike_24);
+                    stopAlarm();
+                } else {
+                    textViewM.setText("Take Rest");
+                    imageViewM.setImageResource(R.drawable.ic_baseline_airline_seat_recline_extra_24);
+
+                    setAlarm();
+
+                }
                 break;
         }
     }
 
+    private void stopAlarm() {
+
+        AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(getContext(), AlarmReceiver.class);
+
+
+        alarmManager.cancel(PendingIntent.getBroadcast(getContext(), 787868,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT | Intent.FILL_IN_DATA));
+        sharedPreferencesManager.edit().putBoolean(SharedPreferencesManager.FLAGTIMER, false).putLong(SharedPreferencesManager.TIMERTIMER, 0).apply();
+        clearTimer();
+        txtTimer.setText("00:00:00");
+
+        Toast.makeText(getActivity(), "Time to take some rest", Toast.LENGTH_SHORT).show();
+
+        Constants.flagAlarm = false;
+        Constants.timerStartTime = 0;
+    }
+
     private void setAlarm() {
-        long mTime = getTime();
+        Calendar c = Calendar.getInstance();
+        c.add(Calendar.HOUR, 3);
+
+        long mTime = c.getTimeInMillis();
         Intent intent = new Intent(getActivity(), AlarmReceiver.class);
         intent.putExtra("title", "Hello, its time to take some rest");
 
@@ -717,16 +754,69 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
 
         assert alarmManager != null;
         alarmManager.set(AlarmManager.RTC_WAKEUP, mTime, pendingIntent);
+
+        sharedPreferencesManager.edit().putBoolean(SharedPreferencesManager.FLAGTIMER, true).putLong(SharedPreferencesManager.TIMERTIMER, mTime).apply();
+
         Toast.makeText(getActivity(), "Journey Started", Toast.LENGTH_SHORT).show();
 
+        Constants.flagAlarm = true;
+        Constants.timerStartTime = c.getTimeInMillis();
+        setTimer();
     }
 
-    private long getTime() {
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.HOUR, 3);
+    public void setTimer() {
 
-        return c.getTimeInMillis();
+
+        try {
+
+            if (Constants.flagAlarm) {
+                timerList.add(new Timer());
+
+                if (timerList.size() > 0 && timerList.get(timerList.size() - 1) != null)
+
+                    timerList.get(timerList.size() - 1).scheduleAtFixedRate(new TimerTask() {
+                        @Override
+                        public void run() {
+                            if (getActivity() != null)
+                                requireActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+
+                                            Date currentDate = sdf.parse(sdf.format(Calendar.getInstance().getTime()));
+
+                                            Long diff = Constants.timerStartTime - currentDate.getTime();
+
+                                            Long n = diff / 1000;
+
+                                            n %= (24 * 3600);
+                                            Long hour = n / 3600;
+
+                                            n %= 3600;
+                                            Long minutes = n / 60;
+
+                                            n %= 60;
+                                            Long seconds = n;
+
+                                            txtTimer.setText(f.format(hour) + ":" + f.format(minutes) + ":" + f.format(seconds));
+
+                                        } catch (Exception e) {
+
+                                        }
+                                    }
+                                });
+
+                        }
+                    }, 0, 1000);
+
+            }
+        } catch (Exception e) {
+            //Toast.makeText(vpnService, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+
     }
+
 
     private class MainActivityLocationCallback
             implements LocationEngineCallback<LocationEngineResult> {
@@ -767,8 +857,8 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
 //                            Toast.LENGTH_SHORT).show();
 
                 if (locationReqCount == 0) {
-                    mapFrag.focusOnLocation(location);
-                    locationReqCount++;
+                    if (mapFrag.focusOnLocation(location))
+                        locationReqCount++;
                 }
 
 
@@ -902,19 +992,30 @@ public class MyMapFragment extends Fragment implements OnMapReadyCallback, Mapbo
 
     @Override
     public void onStop() {
+        if (locationEngine != null)
+            locationEngine.removeLocationUpdates(callback);
+        if (locationComponent != null)
+            locationComponent = null;
 
-        locationEngine.removeLocationUpdates(callback);
+        clearTimer();
+
 
         super.onStop();
     }
 
-
     @Override
     public void onResume() {
-        if (locationComponent != null) {
-            initLocationEngine();
-        }
         super.onResume();
+        setTimer();
+    }
+
+    private void clearTimer() {
+        for (Timer timer : timerList) {
+            timer.purge();
+            timer.cancel();
+        }
+
+        timerList.clear();
     }
 
     @Override

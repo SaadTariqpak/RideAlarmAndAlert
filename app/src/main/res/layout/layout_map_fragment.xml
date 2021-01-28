@@ -11,15 +11,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
-    <!--        android:id="@+id/fab_location_search"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_gravity="end|bottom"-->
-    <!--        android:layout_margin="16dp"-->
-    <!--        android:tint="@android:color/white"-->
-    <!--        app:backgroundTint="@color/design_default_color_primary"-->
-    <!--        app:srcCompat="@android:drawable/ic_search_category_default" />-->
+    <TextView
+        android:id="@+id/txt_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_margin="10dp"
+        android:text="00:00:00"
+        android:textColor="@android:color/black"
+        android:textSize="22sp" />
+
 
     <View
         android:id="@+id/bg"

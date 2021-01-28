@@ -11,6 +11,8 @@ public class SharedPreferencesManager {
     public static final String MyPREFERENCES = "RideAlarmApp";
     public static final String USERNAME = "RideAlarmAppUsername";
     public static final String USERUNIQUEID = "RideAlarmAppUserid";
+    public static final String TIMERTIMER = "RideAlarmAppTIMERTIMER";
+    public static final String FLAGTIMER = "RideAlarmAppFLAGTIMER";
 
 
     public static final String CAT = "userCategory";

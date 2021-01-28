@@ -26,8 +26,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestOptions;
 import com.example.ridealarmandalert.R;
 import com.example.ridealarmandalert.utils.ImagePicker;
 import com.example.ridealarmandalert.utils.SharedPreferencesManager;
@@ -86,7 +84,13 @@ public class UpdateProfileData extends Fragment {
 
         String name = editTextName.getText().toString();
         if (!TextUtils.isEmpty(name)) {
-            editTextName.setError(null);
+            try {
+                double d = Double.parseDouble(name);
+                editTextName.setError("Invalid input.");
+                isValid = false;
+            } catch (NumberFormatException nfe) {
+                editTextName.setError(null);
+            }
 
         } else {
             isValid = false;
@@ -94,7 +98,7 @@ public class UpdateProfileData extends Fragment {
         }
 
         String phone = edtEmergencyPhone.getText().toString();
-        if (!TextUtils.isEmpty(phone)) {
+        if (!TextUtils.isEmpty(phone) && phone.length() >= 11) {
             edtEmergencyPhone.setError(null);
 
         } else {
@@ -103,8 +107,13 @@ public class UpdateProfileData extends Fragment {
         }
         String disease = edtDisease.getText().toString();
         if (!TextUtils.isEmpty(disease)) {
-            edtDisease.setError(null);
-
+            try {
+                double d = Double.parseDouble(disease);
+                edtDisease.setError("Invalid input.");
+                isValid = false;
+            } catch (NumberFormatException nfe) {
+                edtDisease.setError(null);
+            }
         } else {
             isValid = false;
             edtDisease.setError("Required.");

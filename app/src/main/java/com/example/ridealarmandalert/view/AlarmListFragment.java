@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,16 +26,19 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.util.StringUtil;
 
 import com.example.ridealarmandalert.R;
 import com.example.ridealarmandalert.adapter.AlarmListAdapter;
 import com.example.ridealarmandalert.db.DBHelper;
 import com.example.ridealarmandalert.reciever.AlarmReceiver;
 import com.example.ridealarmandalert.utils.MyProgressDialog;
+import com.google.android.gms.common.util.NumberUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import static android.content.Context.ALARM_SERVICE;
 
@@ -123,7 +127,7 @@ public class AlarmListFragment extends Fragment implements DatePickerDialog.OnDa
 
 
     private void setAlarm() {
-        long mTime = getTime();
+        long mTime = getMyDate().getTimeInMillis();
         MyProgressDialog mAlarmNotification = new MyProgressDialog(getActivity());
         DBHelper dbHelper = new DBHelper(getActivity());
         long id = dbHelper.insertAlarm(edtAlarmTitle.getText().toString(), 0, mTime, mAlarmNotification);
@@ -136,12 +140,12 @@ public class AlarmListFragment extends Fragment implements DatePickerDialog.OnDa
         AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(ALARM_SERVICE);
 
         assert alarmManager != null;
-        alarmManager.set(AlarmManager.RTC_WAKEUP, getTime(), pendingIntent);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, mTime, pendingIntent);
 
         adapter.loadAlarms();
     }
 
-    private long getTime() {
+    private Calendar getMyDate() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR, myHour);
         calendar.set(Calendar.MINUTE, myMinute);
@@ -149,9 +153,43 @@ public class AlarmListFragment extends Fragment implements DatePickerDialog.OnDa
         calendar.set(Calendar.DAY_OF_MONTH, myday);
         calendar.set(Calendar.YEAR, myYear);
 
-        return calendar.getTimeInMillis();
+        return calendar;
     }
 
+    private boolean validateAlarm() {
+        Date aDate = getMyDate().getTime();
+        Date cDate = Calendar.getInstance().getTime();
+
+        if (aDate.after(cDate)) {
+            return true;
+        } else {
+            Toast.makeText(getActivity(), "Alarm time is invalid!", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+
+    private boolean validateAlarmTitle() {
+        boolean valid = true;
+        String title = edtAlarmTitle.getText().toString().trim();
+        if (!TextUtils.isEmpty(title)) {
+
+            try {
+                double d = Double.parseDouble(title);
+                edtAlarmTitle.setError("Invalid input.");
+                valid = false;
+            } catch (NumberFormatException nfe) {
+                edtAlarmTitle.setError(null);
+
+            }
+
+
+        } else {
+            valid = false;
+            edtAlarmTitle.setError("Required.");
+        }
+
+        return valid;
+    }
 
     private void setBottomSheet() {
 
@@ -165,11 +203,11 @@ public class AlarmListFragment extends Fragment implements DatePickerDialog.OnDa
             @Override
             public void onClick(View v) {
                 edtAlarmTitle.setError(null);
-                if (!TextUtils.isEmpty(edtAlarmTitle.getText().toString())) {
+                if (validateAlarmTitle() && validateAlarm()) {
                     setAlarm();
                     sheetBehaviorAddAlarm.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                } else
-                    edtAlarmTitle.setError("Required");
+                }
+
             }
         });
 
